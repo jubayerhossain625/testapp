@@ -12,7 +12,6 @@ class ProductList(APIView):
 
     def post(self, request):
         serializer = ProductSerializer(data=request.data)
-        print(serializer)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -24,7 +23,7 @@ class ProductDetail(APIView):
         try:
             product = Product.objects.get(pk=pk)
         except Product.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         serializer = ProductSerializer(product)
         return Response(serializer.data)
 
@@ -32,8 +31,19 @@ class ProductDetail(APIView):
         try:
             product = Product.objects.get(pk=pk)
         except Product.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         serializer = ProductSerializer(product, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, pk):  # Add support for PATCH
+        try:
+            product = Product.objects.get(pk=pk)
+        except Product.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ProductSerializer(product, data=request.data, partial=True)  # Enable partial updates
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -43,6 +53,6 @@ class ProductDetail(APIView):
         try:
             product = Product.objects.get(pk=pk)
         except Product.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
